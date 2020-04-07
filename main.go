@@ -15,7 +15,6 @@ import (
 //filePath string, startStr string, endStr string, cellStart string, cellEnd string, separator string, colNum int, startRow int, sheetNum int
 type MainWindows struct {
 	*walk.MainWindow
-	alert     *walk.Label
 	edit      *walk.TextEdit //输出文本框
 	filePath  *walk.LineEdit //文件名输入框
 	sheetNum  *walk.LineEdit //excel-sheet位置（开始为1，阿拉伯数字）
@@ -34,7 +33,7 @@ func main() {
 		AssignTo: &mws.MainWindow,
 		Title:    "Sql简单拼接",
 		MinSize:  Size{400, 300},
-		Size:     Size{600, 400},
+		Size:     Size{650, 500},
 		MenuItems: []MenuItem{
 			Menu{
 				Text: "文件",
@@ -83,29 +82,28 @@ func main() {
 
 		Layout: VBox{},
 		Children: []Widget{
-			Label{AssignTo: &mws.alert,},
-			Label{Text: "xlsx路径",},
-			LineEdit{AssignTo: &mws.filePath,},
-			Label{Text: "excel-sheet位置（开始为1，阿拉伯数字）",},
+			Label{Text: "xlsx路径"},
+			LineEdit{AssignTo: &mws.filePath},
+			Label{Text: "excel-sheet位置（开始为1，阿拉伯数字）"},
 			LineEdit{AssignTo: &mws.sheetNum, Text: "1"},
-			Label{Text: "excel-数据列列数（开始为1，阿拉伯数字）",},
+			Label{Text: "excel-数据列列数（开始为1，阿拉伯数字）"},
 			LineEdit{AssignTo: &mws.colNum, Text: "7"},
-			Label{Text: "excel-起始行行数（开始为1，阿拉伯数字）",},
+			Label{Text: "excel-起始行行数（开始为1，阿拉伯数字）"},
 			LineEdit{AssignTo: &mws.startRow, Text: "1"},
 			//startStr  *walk.LineEdit //拼接-开始文本
-			Label{Text: "拼接-开始文本",},
+			Label{Text: "拼接-开始文本"},
 			LineEdit{AssignTo: &mws.startStr, Text: "in ("},
 			//cellStart *walk.LineEdit //拼接-单元格开始文本
-			Label{Text: "拼接-单元格开始文本",},
+			Label{Text: "拼接-单元格开始文本"},
 			LineEdit{AssignTo: &mws.cellStart, Text: "'"},
 			//cellEnd   *walk.LineEdit //拼接-单元格结束文本
-			Label{Text: "拼接-单元格结束文本",},
+			Label{Text: "拼接-单元格结束文本"},
 			LineEdit{AssignTo: &mws.cellEnd, Text: "'"},
 			//separator *walk.LineEdit //拼接-分隔文本
-			Label{Text: "拼接-分隔文本",},
+			Label{Text: "拼接-分隔文本"},
 			LineEdit{AssignTo: &mws.separator, Text: ","},
 			//endStr    *walk.LineEdit //拼接-结束文本
-			Label{Text: "拼接-结束文本",},
+			Label{Text: "拼接-结束文本"},
 			LineEdit{AssignTo: &mws.endStr, Text: ")"},
 			PushButton{
 				Column:     1,
@@ -126,22 +124,7 @@ func main() {
 }
 
 func (mws *MainWindows) Alert(title string, content string) {
-	mws.alert.SetText(content)
-	//var alert *walk.MainWindow
-	//err := MainWindow{
-	//	AssignTo: &alert,
-	//	Title:    title,
-	//	Children: []Widget{
-	//		Label{Text: content},
-	//		PushButton{Text: "确定", OnClicked: func() {
-	//			alert.Close()
-	//		}},
-	//	},
-	//}.Create()
-	//if err != nil {
-	//	return
-	//}
-	//alert.Run()
+	walk.MsgBox(mws, title, content, walk.MsgBoxIconWarning)
 }
 
 func (mws *MainWindows) ProcessXlsxToSq() {
@@ -259,7 +242,7 @@ func (mws *MainWindows) openFileActionTriggered() {
 
 func (mws *MainWindows) saveFileActionTriggered() {
 	dlg := new(walk.FileDialog)
-	dlg.Title = "另存为"
+	dlg.Title = "导出"
 
 	if ok, err := dlg.ShowSave(mws); err != nil {
 		fmt.Fprintln(os.Stderr, err)
