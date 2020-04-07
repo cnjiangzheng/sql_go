@@ -11,3 +11,5 @@ go build
 go build -ldflags="-H windowsgui"
 ```
 打包后产生sql_go.exe
+
+使用方法请查看release
