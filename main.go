@@ -32,8 +32,8 @@ func main() {
 	if err := (MainWindow{
 		AssignTo: &mws.MainWindow,
 		Title:    "Sql简单拼接",
-		MinSize:  Size{400, 300},
-		Size:     Size{650, 500},
+		MinSize:  Size{600, 400},
+		Size:     Size{1050, 750},
 		MenuItems: []MenuItem{
 			Menu{
 				Text: "文件",
