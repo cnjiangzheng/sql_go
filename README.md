@@ -15,4 +15,8 @@ go build -ldflags="-H windowsgui"
 ```
 打包后产生sql_go.exe
 
+涉及技术
+
+go GUI、excel解析、字符串拼接、类型转换
+
 使用方法请查看release
