@@ -1,13 +1,13 @@
 package main
 
 import (
-	"./strutils"
+	"./excel"
 	"fmt"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
-	"github.com/tealeg/xlsx"
 	"io"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 )
@@ -39,7 +39,7 @@ func main() {
 				Text: "文件",
 				Items: []MenuItem{
 					Action{
-						Text: "打开xlsx",
+						Text: "打开excel",
 						Shortcut: Shortcut{ //定义快捷键后会有响应提示显示
 							Modifiers: walk.ModControl,
 							Key:       walk.KeyO,
@@ -57,7 +57,7 @@ func main() {
 					Action{
 						Text: "退出",
 						OnTriggered: func() {
-							mws.Close()
+							_ = mws.Close()
 						},
 					},
 				},
@@ -82,7 +82,7 @@ func main() {
 
 		Layout: VBox{},
 		Children: []Widget{
-			Label{Text: "xlsx路径"},
+			Label{Text: "excel路径"},
 			LineEdit{AssignTo: &mws.filePath},
 			Label{Text: "excel-sheet位置（开始为1，阿拉伯数字）"},
 			LineEdit{AssignTo: &mws.sheetNum, Text: "1"},
@@ -117,7 +117,7 @@ func main() {
 		},
 		OnDropFiles: mws.dropFiles,
 	}).Create(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		_, _ = fmt.Fprintln(os.Stderr, err)
 		return
 	}
 	mws.Run()
@@ -148,17 +148,37 @@ func (mws *MainWindows) ProcessXlsxToSq() {
 		mws.Alert("警告", "excel-起始行行数必须是开始为1的阿拉伯数字")
 		return
 	}
-	if sqlStr, err = ParseXlsxToSql(
-		mws.filePath.Text(),
-		mws.startStr.Text(),
-		mws.endStr.Text(),
-		mws.cellStart.Text(),
-		mws.cellEnd.Text(),
-		mws.separator.Text(),
-		colNumInt,
-		startRowInt,
-		sheetNumInt,
-	); err != nil {
+	var ext excel.ExTools
+	if path.Ext(mws.filePath.Text()) == ".xls" {
+		ext = excel.XlsTools{
+			FilePath:  mws.filePath.Text(),
+			StartStr:  mws.startStr.Text(),
+			EndStr:    mws.endStr.Text(),
+			CellStart: mws.cellStart.Text(),
+			CellEnd:   mws.cellEnd.Text(),
+			Separator: mws.separator.Text(),
+			ColNum:    colNumInt,
+			StartRow:  startRowInt,
+			SheetNum:  sheetNumInt,
+		}
+	} else if path.Ext(mws.filePath.Text()) == ".xlsx" {
+		ext = excel.XlsxTools{
+			FilePath:  mws.filePath.Text(),
+			StartStr:  mws.startStr.Text(),
+			EndStr:    mws.endStr.Text(),
+			CellStart: mws.cellStart.Text(),
+			CellEnd:   mws.cellEnd.Text(),
+			Separator: mws.separator.Text(),
+			ColNum:    colNumInt,
+			StartRow:  startRowInt,
+			SheetNum:  sheetNumInt,
+		}
+	} else {
+		mws.Alert("警告", "解析文件后缀名需要是xls或xlsx，目前不支持其他格式。（可以用过其他工具另存为以上两种格式）|"+path.Ext(mws.filePath.Text()))
+		return
+	}
+
+	if sqlStr, err = ext.ParseToSql(); err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(sqlStr)
@@ -167,68 +187,14 @@ func (mws *MainWindows) ProcessXlsxToSq() {
 		mws.Alert("警告", err.Error())
 		return
 	}
-	mws.edit.SetText(sqlStr)
-}
-
-func ParseXlsxToSql(filePath string, startStr string, endStr string, cellStart string, cellEnd string, separator string, colNum int, startRow int, sheetNum int) (string, error) {
-	//起始行数不能小于1
-	if startRow < 1 {
-		return "", fmt.Errorf("输入的起始行数%d不能小于1", startRow)
-	}
-	//表格位置不能小于1
-	if sheetNum < 1 {
-		return "", fmt.Errorf("输入的表格位置%d不能小于1", sheetNum)
-	}
-	//数据列列数不能小于1
-	if colNum < 1 {
-		return "", fmt.Errorf("输入的数据列列数%d不能小于1", colNum)
-	}
-	//读取excel
-	xf, err := xlsx.OpenFile(filePath)
-	if err != nil {
-		return "", err
-	}
-	//输入的表格位置不能超过excel中Sheet数量
-	if sheetNum > len(xf.Sheets) {
-		return "", fmt.Errorf("输入的表格位置%d超过excel中Sheet数量%d", sheetNum, len(xf.Sheets))
-	}
-	sheet := xf.Sheets[sheetNum-1]
-	maxRow := sheet.MaxRow
-	maxCol := sheet.MaxCol
-	sb := strutils.NewStringBuilder(startStr)
-	//起始行数不能大于excel的最大行数
-	if startRow > maxRow {
-		return "", fmt.Errorf("输入的起始行数%d超过excel最大行数%d", startRow, maxRow)
-	}
-	//数据列列数不能大于excel的最大列数
-	if colNum > maxCol {
-		return "", fmt.Errorf("输入的数据列列数%d超过excel最大列数%d", colNum, maxCol)
-	}
-	//遍历sheet
-	for i := startRow - 1; i <= maxRow; i++ {
-		row, err := sheet.Row(i)
-		if err != nil {
-			continue
-		}
-		identity := strings.TrimSpace(row.GetCell(colNum - 1).String())
-		if identity != "" {
-			sb.Append(cellStart).Append(identity).Append(cellEnd).Append(separator)
-		}
-
-	}
-	//若有效遍历的行数大于1则需要删除最后一个分割器
-	if len(startStr) < sb.Len() {
-		sb.SetLen(sb.Len() - len(separator))
-	}
-	sqlStr := sb.Append(endStr).ToString()
-	return sqlStr, nil
+	_ = mws.edit.SetText(sqlStr)
 }
 
 //打开文件方案
 func (mws *MainWindows) openFileActionTriggered() {
 	dlg := new(walk.FileDialog)
 	dlg.Title = "打开xlsx"
-	dlg.Filter = "excel (*.xlsx)|*.xlsx"
+	dlg.Filter = "excel (*.xlsx)|*.xlsx|excel (*.xls)|*.xls"
 
 	if ok, err := dlg.ShowOpen(mws); err != nil {
 		fmt.Fprintln(os.Stderr, "错误：打开文件时\r\n")
