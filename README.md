@@ -10,7 +10,7 @@ go批处理excel合并内容。excel数据转sql。
 ```
 #加载rsrc，用于预处理manifest文建
 go get github.com/akavel/rsrc
-rsrc -manifest test.manifest -o main.syso
+rsrc -manifest main.manifest -o main.syso
 #编译打包
 go build
 go build -ldflags="-H windowsgui"
