@@ -68,7 +68,7 @@ func main() {
 					Action{
 						Text: "关于",
 						OnTriggered: func() {
-							walk.MsgBox(mws, "关于", "这是一个菜单和工具栏的实例",
+							walk.MsgBox(mws, "关于", "这个工具为王sao峰设计，疫情项目每天一点两点要转sql。另外《武汉战疫小程序》UP！！！--武汉战疫项目组-0x5f81",
 								walk.MsgBoxIconInformation|walk.MsgBoxDefButton1)
 						},
 					},
